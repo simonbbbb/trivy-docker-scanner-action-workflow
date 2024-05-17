@@ -64,10 +64,11 @@ jobs:
       - name: Capture scan results
         id: capture_results
         run: |
-          content=$(cat vulnerability-report.md)
+          content=$(cat vulnerability-report.md | head -c 65000)
           echo "report<<EOF" >> $GITHUB_ENV
           echo "$content" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
+
 
       - name: Upload scan results
         uses: actions/upload-artifact@v2
