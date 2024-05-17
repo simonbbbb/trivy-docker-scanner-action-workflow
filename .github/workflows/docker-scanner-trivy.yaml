@@ -60,12 +60,14 @@ jobs:
             ""
           ] | join("\n")
           ' scan-results.json > vulnerability-report.md
-
+     
       - name: Capture scan results
         id: capture_results
         run: |
           content=$(cat vulnerability-report.md)
-          echo "::set-output name=report::$content"
+          echo "report<<EOF" >> $GITHUB_ENV
+          echo "$content" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
 
       - name: Upload scan results
         uses: actions/upload-artifact@v2
@@ -81,4 +83,4 @@ jobs:
             Trivy scan report:
             ${{ steps.capture_results.outputs.report }}
             
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ env.report }}
