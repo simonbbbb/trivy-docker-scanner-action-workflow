@@ -41,15 +41,6 @@ jobs:
         run: |
           trivy image --format json --output scan-results.json my-image:pr-${{ github.event.number }}
 
-      - name: Generate vulnerability report
-        id: generate-report
-        run: |
-          chmod +x generate-vulnerability-report.sh
-          REPORT_CONTENT=$(bash generate-vulnerability-report.sh)
-          echo "$REPORT_CONTENT"
-          echo "::set-output name=markdown_content::$REPORT_CONTENT"
-        shell: bash
-
       - name: Comment scan results on PR
         uses: marocchino/sticky-pull-request-comment@v2
         with:
@@ -57,4 +48,5 @@ jobs:
           message: |
             Trivy scan report:
             ${{ steps.generate-report.outputs.markdown_content }}
+            echo "$(jq -r 'def hr(severity): if severity == "HIGH" or severity == "CRITICAL" then true else false end; def to_md: "| " + (.VulnerabilityID // "") + " | " + (.PkgName // "") + " | " + (.InstalledVersion // "") + " | " + (.Severity // "") + " | " + (.Title // "") + " |"; ["# Docker Image Scan Results", "", "## High and Critical Vulnerabilities", "", "| Vulnerability ID | Package | Version | Severity | Description |", "|------------------|---------|---------|----------|-------------|", (.Results[] | .Vulnerabilities[] | select(hr(.Severity)) | to_md), ""] | join("\n")' scan-results.json)"
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
