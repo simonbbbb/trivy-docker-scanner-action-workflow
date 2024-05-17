@@ -46,11 +46,10 @@ jobs:
         with:
           name: scan-results
           path: scan-results.json
-
-      - name: Comment scan results on PR
-        uses: marocchino/sticky-pull-request-comment@v2
+      
+      - name: Comment PR
+        uses: thollander/actions-comment-pull-request@v2
         with:
-          path: scan-results.json
-          header: "Docker Image Scan Results"
-          message: "Here are the scan results for the Docker image built from this PR."
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          filePath: scan-results.json
+          message: |
+            Here are the scan results for the Docker image built from this PR.
