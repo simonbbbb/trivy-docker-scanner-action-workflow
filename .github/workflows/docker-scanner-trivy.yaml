@@ -41,12 +41,44 @@ jobs:
         run: |
           trivy image --format json --output scan-results.json my-image:pr-${{ github.event.number }}
 
+      - name: Extract high and critical vulnerabilities
+        id: extract_vulnerabilities
+        run: |
+          jq -r '
+          def hr(severity):
+            if severity == "HIGH" or severity == "CRITICAL" then true else false end;
+          def to_md:
+            "| " + (.VulnerabilityID // "") + " | " + (.PkgName // "") + " | " + (.InstalledVersion // "") + " | " + (.Severity // "") + " | " + (.Title // "") + " |";
+          [
+            "# Docker Image Scan Results",
+            "",
+            "## High and Critical Vulnerabilities",
+            "",
+            "| Vulnerability ID | Package | Version | Severity | Description |",
+            "|------------------|---------|---------|----------|-------------|",
+            (.Results[] | .Vulnerabilities[] | select(hr(.Severity)) | to_md),
+            ""
+          ] | join("\n")
+          ' scan-results.json > vulnerability-report.md
+
+      - name: Capture scan results
+        id: capture_results
+        run: |
+          content=$(cat vulnerability-report.md)
+          echo "::set-output name=report::$content"
+
+      - name: Upload scan results
+        uses: actions/upload-artifact@v2
+        with:
+          name: vulnerability-report
+          path: vulnerability-report.md
+
       - name: Comment scan results on PR
         uses: marocchino/sticky-pull-request-comment@v2
         with:
           header: Docker Image Scan Results
           message: |
             Trivy scan report:
-            ${{ steps.generate-report.outputs.markdown_content }}
-            echo "$(jq -r 'def hr(severity): if severity == "HIGH" or severity == "CRITICAL" then true else false end; def to_md: "| " + (.VulnerabilityID // "") + " | " + (.PkgName // "") + " | " + (.InstalledVersion // "") + " | " + (.Severity // "") + " | " + (.Title // "") + " |"; ["# Docker Image Scan Results", "", "## High and Critical Vulnerabilities", "", "| Vulnerability ID | Package | Version | Severity | Description |", "|------------------|---------|---------|----------|-------------|", (.Results[] | .Vulnerabilities[] | select(hr(.Severity)) | to_md), ""] | join("\n")' scan-results.json)"
+            ${{ steps.capture_results.outputs.report }}
+            
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
