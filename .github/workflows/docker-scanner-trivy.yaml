@@ -45,9 +45,10 @@ jobs:
         id: generate-report
         run: |
           chmod +x generate-vulnerability-report.sh
-          bash generate-vulnerability-report.sh > report.md
-        env:
-          MARKDOWN_CONTENT: $(bash generate-vulnerability-report.sh)
+          REPORT_CONTENT=$(bash generate-vulnerability-report.sh)
+          echo "$REPORT_CONTENT"
+          echo "::set-output name=markdown_content::$REPORT_CONTENT"
+        shell: bash
 
       - name: Comment scan results on PR
         uses: marocchino/sticky-pull-request-comment@v2
@@ -55,5 +56,5 @@ jobs:
           header: Docker Image Scan Results
           message: |
             Trivy scan report:
-            ${{ steps.generate-report.outputs.MARKDOWN_CONTENT }}
+            ${{ steps.generate-report.outputs.markdown_content }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
