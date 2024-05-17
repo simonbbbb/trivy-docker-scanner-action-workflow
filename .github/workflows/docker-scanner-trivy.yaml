@@ -41,15 +41,17 @@ jobs:
         run: |
           trivy image --format json --output scan-results.json my-image:pr-${{ github.event.number }}
 
-      - name: Upload scan results
-        uses: actions/upload-artifact@v2
+      - name: Generate vulnerability report
+        id: generate-report
+        run: |
+          chmod +x generate-vulnerability-report.sh
+          bash generate-vulnerability-report.sh > report.md
+        env:
+          MARKDOWN_CONTENT: $(bash generate-vulnerability-report.sh)
+
+      - name: Comment scan results on PR
+        uses: marocchino/sticky-pull-request-comment@v2
         with:
-          name: scan-results
-          path: scan-results.json
-      
-      - name: Comment PR
-        uses: thollander/actions-comment-pull-request@v2
-        with:
-          filePath: scan-results.json
-          message: |
-            Here are the scan results for the Docker image built from this PR.
+          header: Docker Image Scan Results
+          message: ${{ steps.generate-report.outputs.MARKDOWN_CONTENT }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
