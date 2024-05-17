@@ -81,6 +81,6 @@ jobs:
           header: Docker Image Scan Results
           message: |
             Trivy scan report:
-            ${{ steps.capture_results.outputs.report }}
+            ${{ env.report }}
             
-          GITHUB_TOKEN: ${{ env.report }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
