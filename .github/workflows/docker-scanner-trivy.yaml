@@ -53,5 +53,7 @@ jobs:
         uses: marocchino/sticky-pull-request-comment@v2
         with:
           header: Docker Image Scan Results
-          message: ${{ steps.generate-report.outputs.MARKDOWN_CONTENT }}
+          message: |
+            Trivy scan report:
+            ${{ steps.generate-report.outputs.MARKDOWN_CONTENT }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
