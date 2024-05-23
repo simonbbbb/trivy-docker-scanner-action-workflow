@@ -1,5 +1,5 @@
 # Use a vulnerable base image
-FROM node:10
+FROM node:slim
 
 # Create app directory
 WORKDIR /usr/src/app
